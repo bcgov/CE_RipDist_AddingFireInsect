@@ -175,7 +175,42 @@ with arcpy.da.UpdateCursor(lyr_au, [AU ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstr
 		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU" + str(test[0]) + "_" + time	
 		arcpy.Clip_analysis(Stream_Dist_Insect, lyr_au, au_Stream_Insect_Dist)
 		
+		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
+		desc = arcpy.Describe(au_Stream_Insect_Dist)
+		geomField = desc.shapeFieldName
+		insect_areaFieldName = str(geomField) + "_Area"
 		
+		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
+		desc = arcpy.Describe(au_Stream_Fire_Dist)
+		geomField = desc.shapeFieldName
+		Fire_areaFieldName = str(geomField) + "_Area"
+		
+		#Output stats tables
+		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time	
+		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time	
+		
+		#Get the total area for each
+		arcpy.Statistics_analysis(au_Stream_Fire_Dist, au_Stream_Fire_sum, [Fire_areaFieldName, "SUM"])
+		arcpy.Statistics_analysis(au_Stream_Insect_Dist, au_Stream_Insect_sum, [insect_areaFieldName, "SUM"])
+		
+		#Iterate through to get the sum of the lines for fire
+		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
+		fire_sum = 0
+		for sum_fun in cursor:
+			fire_sum = sum_fun2.getValue(Fire_areaFieldName) + fire_sum
+		
+		#set the total value into the output feature
+		test[1] = fire_sum
+		
+		#Iterate through to get the sum of the lines for insect
+		cursor2 = arcpy.SearchCursor(au_Stream_Insect_sum)
+		insect_sum = 0
+		for sum_fun2 in cursor2:
+			insect_sum = sum_fun2.getValue(insect_areaFieldName) + insect_sum
+		
+		test[2] = insect_sum
+		
+		cursor.updateRow(test)
 		
 		
 #Calculate Fields
