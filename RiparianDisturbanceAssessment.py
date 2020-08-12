@@ -125,7 +125,6 @@ arcpy.AddField_management(working_au, "Rip_Fire_Dstrb_PCNT", "DOUBLE")
 arcpy.AddField_management(working_au, "Rip_Insect_Dstrb_PCNT", "DOUBLE")
 arcpy.AddField_management(working_au, "Rip_Tot_All_Dstrb_KM", "DOUBLE")
 arcpy.AddField_management(working_au, "Rip_Tot_All_Dstrb_PCNT", "DOUBLE")
-arcpy.AddField_management(working_au, "Rip_Tot_All_Dstrb_PCNT", "DOUBLE")
 arcpy.AddField_management(working_au, "Rip_Tot_All_Dstrb_CLS", "TEXT")
 arcpy.AddField_management(working_au, "Rip_Tot_All_Dstrb_NUM", "SHORT")
 
@@ -141,6 +140,7 @@ datasetList = arcpy.ListDatasets("*", "Feature")
 for dataset in datasetList:
     print dataset
 '''
+
 #Create buffer disturbance features
 Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + time
 Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + time
@@ -200,7 +200,7 @@ with arcpy.da.UpdateCursor(lyr_au, [AU ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstr
 			fire_sum = sum_fun2.getValue(Fire_areaFieldName) + fire_sum
 		
 		#set the total value into the output feature
-		test[1] = fire_sum
+		test[1] = fire_sum/1000
 		
 		#Iterate through to get the sum of the lines for insect
 		cursor2 = arcpy.SearchCursor(au_Stream_Insect_sum)
@@ -208,14 +208,30 @@ with arcpy.da.UpdateCursor(lyr_au, [AU ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstr
 		for sum_fun2 in cursor2:
 			insect_sum = sum_fun2.getValue(insect_areaFieldName) + insect_sum
 		
-		test[2] = insect_sum
+		test[2] = insect_sum/1000
 		
 		cursor.updateRow(test)
 		
-		
+
+lyr_au.definition = ""		
 #Calculate Fields
 
-#Percent Stream Disturbed
+#Calc Percents
+form1 = r"(!Rip_Fire_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
+form2 = r"(!Rip_Insect_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
+
+arcpy.CalculateField_management(lyr_au, "Rip_Fire_Dstrb_PCNT", form1, "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Insect_Dstrb_PCNT", form2, "PYTHON_9.3")
+
+#Calc New Total Disturbance
+form3 = r"!Rip_Fire_Dstrb_KM!+!Rip_Insect_Dstrb_KM!+!Rip_Tot_Human_Dstrb_KM!"
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_KM", form3, "PYTHON_9.3")
+
+#Calc Total Rip Dist 
+form4 = r"(!Rip_Tot_All_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_PCNT", form3, "PYTHON_9.3")
+
+#Create, and calc the class and class num
 
 #Class Rating
 #Thresholds
