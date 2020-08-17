@@ -92,10 +92,10 @@ arcpy.Merge_management([SSAF_Current_Fire, SSAF_Historic_Fire], Dist_Fire)
 insect_hmn_remove = output_gdb + r"\insect_hmn_remove_" + time
 
 #Insect w/ all other disturbance removed
-insect_dist_no_Overlap = output_gdb + r"\Insect_Dist_" + time
+insect_dist_no_Overlap = output_gdb + r"\SSAF_OnlyInsect_Dist_" + time
 
 #Fire w/all other disturbance removed
-fire_dist_no_Overlap = output_gdb + r"\Fire_Dist_" + time
+fire_dist_no_Overlap = output_gdb + r"\SSAF_OnlyFire_Dist_" + time
 
 #Erase the human disturbance from the fire disturbance
 arcpy.Erase_analysis(Dist_Fire, human_dist, fire_dist_no_Overlap)
