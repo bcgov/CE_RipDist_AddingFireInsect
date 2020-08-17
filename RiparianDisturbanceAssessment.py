@@ -34,13 +34,19 @@ au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ES
 #streams = arcpy.GetParameterAsText(1)
 streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\Data\SSAF_fwaAU_FWA_Streams_200605"
 
-#Save Location Folder
-#output_save = arcpy.GetParameterAsText(4)
-output_save = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis"
+
 
 #Insect Disturbance input
 #insect = arcpy.GetParameterAsText(3)
 insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
+
+#Save Location Folder
+#output_save = arcpy.GetParameterAsText(4)
+output_save = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis"
+
+#Unique Assessment Unit ID
+au_ID = "WATERSHED_FEATURE_ID"
+#au_ID = arcpy.GetParameterAsText(5)
 
 #Human disturbance input
 #Make sure that the disturbance feature includes roads and guard buffer
@@ -66,16 +72,16 @@ Input_hist_fire = os.path.join(BCGW,current_fire)
 arcpy.MakeFeatureLayer_management(Input_hist_fire,"histFire_lyr")
 lyr_histFire = arcpy.mapping.Layer("histFire_lyr")
 
-lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  FireYear
+lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  str(FireYear)
 SSAF_Current_Fire = output_gdb + r"\SSAF_Current_Fire_" + time
 SSAF_Historic_Fire = output_gdb + r"\SSAF_Historic_Dist_Fire_" + time
 
 
-arcpy.Clip_analysis(lyr_histFire, au, SSAF_Dist_Historic_Fire)
-arcpy.Clip_analysis(Input_current_fire_fire, au, SSAF_Current_Fire_Fire)
+arcpy.Clip_analysis(lyr_histFire, au, SSAF_Historic_Fire)
+arcpy.Clip_analysis(Input_current_fire, au, SSAF_Current_Fire)
 
 Dist_Fire = output_gdb + r"\SSAF_Dist_Fire_" + time
-arcpy.Merge_management([SSAF_Current_Fire, SSAF_Historic_Fire], All_Fire)
+arcpy.Merge_management([SSAF_Current_Fire, SSAF_Historic_Fire], Dist_Fire)
 
 #Jesse Fraser - 2020-08-11
 #Need:
@@ -160,7 +166,7 @@ arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
 lyr_au = arcpy.mapping.Layer("au_lyr")
 #Iterate through each assessment unit
-with arcpy.da.UpdateCursor(lyr_au, [AU ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstrb_KM"]) as cursor:
+with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstrb_KM"]) as cursor:
 	for test in cursor:
 
 		#query the au layer to make sure that we are only working on an assessment unit
