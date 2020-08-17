@@ -52,7 +52,7 @@ arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
 #Fire Disturbance from past 60 years input
-	#Jesse Frsaer 2020/08/11 Doesn't need to be an input variable pull data from BCGW
+	#Jesse Fraser 2020/08/11 Doesn't need to be an input variable pull data from BCGW
 #fires = arcpy.GetParameterAsText(2)
 #fires_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\RipDist_NS_200703.gdb\Fire_HmnErased_RipDistArea_200715"
 hist_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_HISTORICAL_FIRE_POLYS_SP'
@@ -66,7 +66,7 @@ Input_hist_fire = os.path.join(BCGW,current_fire)
 arcpy.MakeFeatureLayer_management(Input_hist_fire,"histFire_lyr")
 lyr_histFire = arcpy.mapping.Layer("histFire_lyr")
 
-lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  FireYear  
+lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  FireYear
 SSAF_Current_Fire = output_gdb + r"\SSAF_Current_Fire_" + time
 SSAF_Historic_Fire = output_gdb + r"\SSAF_Historic_Dist_Fire_" + time
 
@@ -86,10 +86,10 @@ arcpy.Merge_management([SSAF_Current_Fire, SSAF_Historic_Fire], All_Fire)
 insect_hmn_remove = output_gdb + r"\insect_hmn_remove_" + time
 
 #Insect w/ all other disturbance removed
-insect_dist_no_Overlap = output_gdb + r"\Insect_Dist_" + time 
+insect_dist_no_Overlap = output_gdb + r"\Insect_Dist_" + time
 
 #Fire w/all other disturbance removed
-fire_dist_no_Overlap = output_gdb + r"\Fire_Dist_" + time 
+fire_dist_no_Overlap = output_gdb + r"\Fire_Dist_" + time
 
 #Erase the human disturbance from the fire disturbance
 arcpy.Erase_analysis(Dist_Fire, human_dist, fire_dist_no_Overlap)
@@ -162,58 +162,58 @@ lyr_au = arcpy.mapping.Layer("au_lyr")
 #Iterate through each assessment unit
 with arcpy.da.UpdateCursor(lyr_au, [AU ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstrb_KM"]) as cursor:
 	for test in cursor:
-		
+
 		#query the au layer to make sure that we are only working on an assessment unit
 		lyr_au.definitionQuery = au_ID + r" = " + test[0]
-		
-		#Clip by AU		
+
+		#Clip by AU
 		#Fire
-		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU" + str(test[0]) + "_" + time	
+		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
 		arcpy.Clip_analysis(Stream_Dist_Fire, lyr_au, au_Stream_Fire_Dist)
-		
+
 		#Insect
-		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU" + str(test[0]) + "_" + time	
+		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
 		arcpy.Clip_analysis(Stream_Dist_Insect, lyr_au, au_Stream_Insect_Dist)
-		
+
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
 		desc = arcpy.Describe(au_Stream_Insect_Dist)
 		geomField = desc.shapeFieldName
 		insect_areaFieldName = str(geomField) + "_Area"
-		
+
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
 		desc = arcpy.Describe(au_Stream_Fire_Dist)
 		geomField = desc.shapeFieldName
 		Fire_areaFieldName = str(geomField) + "_Area"
-		
+
 		#Output stats tables
-		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time	
-		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time	
-		
+		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
+		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
+
 		#Get the total area for each
 		arcpy.Statistics_analysis(au_Stream_Fire_Dist, au_Stream_Fire_sum, [Fire_areaFieldName, "SUM"])
 		arcpy.Statistics_analysis(au_Stream_Insect_Dist, au_Stream_Insect_sum, [insect_areaFieldName, "SUM"])
-		
+
 		#Iterate through to get the sum of the lines for fire
 		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
 		fire_sum = 0
 		for sum_fun in cursor:
 			fire_sum = sum_fun2.getValue(Fire_areaFieldName) + fire_sum
-		
+
 		#set the total value into the output feature
 		test[1] = fire_sum/1000
-		
+
 		#Iterate through to get the sum of the lines for insect
 		cursor2 = arcpy.SearchCursor(au_Stream_Insect_sum)
 		insect_sum = 0
 		for sum_fun2 in cursor2:
 			insect_sum = sum_fun2.getValue(insect_areaFieldName) + insect_sum
-		
-		test[2] = insect_sum/1000
-		
-		cursor.updateRow(test)
-		
 
-lyr_au.definition = ""		
+		test[2] = insect_sum/1000
+
+		cursor.updateRow(test)
+
+
+lyr_au.definition = ""
 #Calculate Fields
 
 #Calc Percents
@@ -227,14 +227,38 @@ arcpy.CalculateField_management(lyr_au, "Rip_Insect_Dstrb_PCNT", form2, "PYTHON_
 form3 = r"!Rip_Fire_Dstrb_KM!+!Rip_Insect_Dstrb_KM!+!Rip_Tot_Human_Dstrb_KM!"
 arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_KM", form3, "PYTHON_9.3")
 
-#Calc Total Rip Dist 
+#Calc Total Rip Dist
 form4 = r"(!Rip_Tot_All_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
 arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_PCNT", form3, "PYTHON_9.3")
 
 #Create, and calc the class and class num
 
-#Class Rating
-#Thresholds
-Low = <5
-Medium = 5-15
-High = > 15
+#Low
+#definition query to only have Low Risk Watersehds
+lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT <=5 OR Rip_Tot_All_Dstrb_PCNT IS NULL"
+
+#Populate Appropriate fields
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "Low", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "0", "PYTHON_9.3")
+
+lyr_au.definitionQuery = ""
+
+#Medium
+#definition query to only have Medium Risk Watershed
+lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT >5 AND Rip_Tot_All_Dstrb_PCNT <=15"
+
+#Populate Appropriate fields
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "Medium", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "1", "PYTHON_9.3")
+
+lyr_au.definitionQuery = ""
+
+#High
+#definition query to only have High Risk Watershed
+lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT >15 "
+
+#Populate Appropriate fields
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "High", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "2", "PYTHON_9.3")
+
+lyr_au.definitionQuery = ""
