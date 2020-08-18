@@ -10,8 +10,10 @@
 #-------------------------------------------------------------------------------
 
 #Import system modules
-import sys, string, os, time, win32com.client, datetime, win32api, arcpy, arcpy.mapping , csv
+import sys, string, os, time,  datetime,  arcpy,  csv
 
+#ArcPro Doesn't Like these
+import win32com.client, win32api,arcpy.mapping ,
 #Set environment settings
 from arcpy import env
 arcpy.env.overwriteOutput = True
@@ -26,6 +28,9 @@ FireYear = now.year - 60
 
 #Location of BCGW w/Password embedded... You need to have a database called BCGW4Scripting.sde
 BCGW = r'Database Connections\BCGW4Scripting.sde'
+#For ArcPro
+#BCGW = r"C:\Users\JWFRASER\Documents\ArcGIS\Projects\MyProject1\BCGW4Scripting.sde"
+
 
 #Current Assessment Data with Assessment Units input
 #au = arcpy.GetParameterAsText(0)
@@ -38,7 +43,7 @@ streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Da
 
 #Insect Disturbance input
 #insect = arcpy.GetParameterAsText(3)
-insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
+insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Disturbance_Beetle_200715"
 
 #Save Location Folder
 #output_save = arcpy.GetParameterAsText(4)
@@ -50,7 +55,7 @@ au_ID = "WATERSHED_FEATURE_ID"
 
 #Human disturbance input
 #Make sure that the disturbance feature includes roads and guard buffer
-human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_ExtendedSSAF_Disturbance_RoadsGuardTrails_2018_200709"
+human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_DisturbanceOnly"
 
 #Create working geodatabase
 save_gdb = "Working_RipDist_" + time
