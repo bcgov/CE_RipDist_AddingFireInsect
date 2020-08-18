@@ -13,7 +13,7 @@
 import sys, string, os, time,  datetime,  arcpy,  csv
 
 #ArcPro Doesn't Like these
-import win32com.client, win32api,arcpy.mapping ,
+import win32com.client, win32api,arcpy.mapping
 #Set environment settings
 from arcpy import env
 arcpy.env.overwriteOutput = True
@@ -30,7 +30,8 @@ FireYear = now.year - 60
 BCGW = r'Database Connections\BCGW4Scripting.sde'
 #For ArcPro
 #BCGW = r"C:\Users\JWFRASER\Documents\ArcGIS\Projects\MyProject1\BCGW4Scripting.sde"
-
+#For 10.3
+#BCGW = r'bcgw.bcgov\idwprod1.bcgov'
 
 #Current Assessment Data with Assessment Units input
 #au = arcpy.GetParameterAsText(0)
@@ -44,6 +45,8 @@ streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Da
 #Insect Disturbance input
 #insect = arcpy.GetParameterAsText(3)
 insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Disturbance_Beetle_200715"
+insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
+
 
 #Save Location Folder
 #output_save = arcpy.GetParameterAsText(4)
@@ -55,17 +58,51 @@ au_ID = "WATERSHED_FEATURE_ID"
 
 #Human disturbance input
 #Make sure that the disturbance feature includes roads and guard buffer
-human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_DisturbanceOnly"
+human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_Dissolve_Hmn_DisturbanceOnly"
 
 #Create working geodatabase
 save_gdb = "Working_RipDist_" + time
 arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
+#Dissolve all the disturbance features
+insect_dissolve = output_gdb + r"\SSAF_Insecct_Dissolve_" + time
+hmn_dissolve = output_gdb + r"\SSAF_hmn_Dissolve_" + time
+
+arcpy.Dissolve_management(insect_base, insect_dissolve)
+
+arcpy.Dissolve_management(human_dist, hmn_dissolve)
+
+#These may fail if the geometry is funky... Had to fix the geometry of human dist for the first erase
+#Added Repair Geometry
+arcpy.RepairGeometry_management(hmn_dissolve)
+arcpy.RepairGeometry_management(insect_dissolve)
+
 #Fire Disturbance from past 60 years input
 	#Jesse Fraser 2020/08/11 Doesn't need to be an input variable pull data from BCGW
 #fires = arcpy.GetParameterAsText(2)
 #fires_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\RipDist_NS_200703.gdb\Fire_HmnErased_RipDistArea_200715"
+
+SSAF_Current_Fire = output_gdb + r"\SSAF_Current_Fire_" + time
+SSAF_Historic_Fire = output_gdb + r"\SSAF_Historic_Dist_Fire_" + time
+
+#Issue arose in 10.3 because of background processing not because of any code issues (os.path.join only works this way)
+'''
+#Arc 10.3 
+arcpy.env.workspace = r"Database Connections\BCGW4Scripting.sde"
+hist_fire = r'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_HISTORICAL_FIRE_POLYS_SP'
+current_fire = r'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_CURRENT_FIRE_POLYS_SP'
+
+#create a query layer for the historic fires
+arcpy.MakeFeatureLayer_management(hist_fire,"histFire_lyr")
+lyr_histFire = arcpy.mapping.Layer("histFire_lyr")
+
+
+arcpy.Clip_analysis(current_fire, au, SSAF_Current_Fire)
+
+
+''' 
+#Arc 10.6
 hist_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_HISTORICAL_FIRE_POLYS_SP'
 current_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_CURRENT_FIRE_POLYS_SP'
 
@@ -73,17 +110,24 @@ current_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_CURRENT_FIRE_POLYS_SP'
 Input_current_fire = os.path.join(BCGW,hist_fire)
 Input_hist_fire = os.path.join(BCGW,current_fire)
 
+#Get the BCGW fire features
+Input_current_fire = os.path.join(BCGW,hist_fire)
+Input_hist_fire = os.path.join(BCGW,current_fire)
+
+arcpy.Clip_analysis(Input_current_fire, au, SSAF_Current_Fire)
+
 #create a query layer for the historic fires
 arcpy.MakeFeatureLayer_management(Input_hist_fire,"histFire_lyr")
 lyr_histFire = arcpy.mapping.Layer("histFire_lyr")
 
-lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  str(FireYear)
-SSAF_Current_Fire = output_gdb + r"\SSAF_Current_Fire_" + time
-SSAF_Historic_Fire = output_gdb + r"\SSAF_Historic_Dist_Fire_" + time
 
+
+lyr_histFire.definitionQuery = r"FIRE_YEAR >= " +  str(FireYear)
+#End 10.6 v 10.3
 
 arcpy.Clip_analysis(lyr_histFire, au, SSAF_Historic_Fire)
-arcpy.Clip_analysis(Input_current_fire, au, SSAF_Current_Fire)
+
+
 
 Dist_Fire = output_gdb + r"\SSAF_Dist_Fire_" + time
 arcpy.Merge_management([SSAF_Current_Fire, SSAF_Historic_Fire], Dist_Fire)
@@ -102,11 +146,13 @@ insect_dist_no_Overlap = output_gdb + r"\SSAF_OnlyInsect_Dist_" + time
 #Fire w/all other disturbance removed
 fire_dist_no_Overlap = output_gdb + r"\SSAF_OnlyFire_Dist_" + time
 
+
+
 #Erase the human disturbance from the fire disturbance
-arcpy.Erase_analysis(Dist_Fire, human_dist, fire_dist_no_Overlap)
+arcpy.Erase_analysis(Dist_Fire, hmn_dissolve, fire_dist_no_Overlap)
 
 #Erase the human disturbance from insect disturbance
-arcpy.Erase_analysis(insect_base, human_dist, insect_hmn_remove)
+arcpy.Erase_analysis(insect_dissolve, hmn_dissolve, insect_hmn_remove)
 
 #Erase the fire disturbance from the insect disturbance
 arcpy.Erase_analysis(insect_hmn_remove, fire_dist_no_Overlap, insect_dist_no_Overlap)
