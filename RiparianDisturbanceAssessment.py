@@ -65,6 +65,8 @@ save_gdb = "Working_RipDist_" + time
 arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
+#Things are being very funky here... I can't get it to complete in a reasonable time period for unknown reasons
+
 #Dissolve all the disturbance features
 insect_dissolve = output_gdb + r"\SSAF_Insecct_Dissolve_" + time
 hmn_dissolve = output_gdb + r"\SSAF_hmn_Dissolve_" + time
