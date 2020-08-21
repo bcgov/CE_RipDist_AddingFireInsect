@@ -23,8 +23,10 @@ time = time.strftime("%y%m%d")
 
 #set a time year variable from current year
 now = datetime.datetime.now()
+
+#Removing because I created the inputs
 #create a definition query variable that is 60 years old
-FireYear = now.year - 60
+#FireYear = now.year - 60
 
 #Location of BCGW w/Password embedded... You need to have a database called BCGW4Scripting.sde
 BCGW = r'Database Connections\BCGW4Scripting.sde'
@@ -40,45 +42,62 @@ au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ES
 #streams = arcpy.GetParameterAsText(1)
 streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\Data\SSAF_fwaAU_FWA_Streams_200605"
 
-
-
 #Insect Disturbance input
 #insect = arcpy.GetParameterAsText(3)
-insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Disturbance_Beetle_200715"
-insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
+insect = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Beetle_Disturbance_NoOther_200821"
 
+#Fire Disturbance input
+#fire = arcpy.GetParameterAsText(4)
+fire = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Fire_Disturbance_NoHmnDist_200821"
+
+#insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Disturbance_Beetle_200715"
+#insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
 
 #Save Location Folder
-#output_save = arcpy.GetParameterAsText(4)
+#output_save = arcpy.GetParameterAsText(5)
 output_save = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis"
 
 #Unique Assessment Unit ID
 au_ID = "WATERSHED_FEATURE_ID"
-#au_ID = arcpy.GetParameterAsText(5)
+#au_ID = arcpy.GetParameterAsText(6)
 
 #Human disturbance input
 #Make sure that the disturbance feature includes roads and guard buffer
-human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_Dissolve_Hmn_DisturbanceOnly"
+#human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_Dissolve_Hmn_DisturbanceOnly"
 
 #Create working geodatabase
 save_gdb = "Working_RipDist_" + time
 arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
+#Copy FWA Streams to new geodatabase
+working_streams = output_gdb + r"\streams_" + time
+arcpy.CopyFeatures_management(streams, working_streams)
+
+#Copy Fire Disturbance to new geodatabase
+working_fires = output_gdb + r"\fires_" + time
+arcpy.CopyFeatures_management(fire, working_fires)
+
+#Copy Insect Disturbance to new geodatabse
+working_insect = output_gdb + r"\insect_" + time
+arcpy.CopyFeatures_management(insect, working_insect)
+
+''' Removed because I created the disturbance inputs
+
 #Things are being very funky here... I can't get it to complete in a reasonable time period for unknown reasons
 
 #Dissolve all the disturbance features
-insect_dissolve = output_gdb + r"\SSAF_Insecct_Dissolve_" + time
-hmn_dissolve = output_gdb + r"\SSAF_hmn_Dissolve_" + time
+#insect_dissolve = output_gdb + r"\SSAF_Insecct_Dissolve_" + time
+#hmn_dissolve = output_gdb + r"\SSAF_hmn_Dissolve_" + time
 
-arcpy.Dissolve_management(insect_base, insect_dissolve)
+#arcpy.Dissolve_management(insect_base, insect_dissolve)
 
-arcpy.Dissolve_management(human_dist, hmn_dissolve)
+#arcpy.Dissolve_management(human_dist, hmn_dissolve)
 
 #These may fail if the geometry is funky... Had to fix the geometry of human dist for the first erase
 #Added Repair Geometry
-arcpy.RepairGeometry_management(hmn_dissolve)
-arcpy.RepairGeometry_management(insect_dissolve)
+#arcpy.RepairGeometry_management(hmn_dissolve)
+#arcpy.RepairGeometry_management(insect_dissolve)
 
 #Fire Disturbance from past 60 years input
 	#Jesse Fraser 2020/08/11 Doesn't need to be an input variable pull data from BCGW
@@ -89,7 +108,7 @@ SSAF_Current_Fire = output_gdb + r"\SSAF_Current_Fire_" + time
 SSAF_Historic_Fire = output_gdb + r"\SSAF_Historic_Dist_Fire_" + time
 
 #Issue arose in 10.3 because of background processing not because of any code issues (os.path.join only works this way)
-'''
+
 #Arc 10.3 
 arcpy.env.workspace = r"Database Connections\BCGW4Scripting.sde"
 hist_fire = r'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_HISTORICAL_FIRE_POLYS_SP'
@@ -103,7 +122,7 @@ lyr_histFire = arcpy.mapping.Layer("histFire_lyr")
 arcpy.Clip_analysis(current_fire, au, SSAF_Current_Fire)
 
 
-''' 
+
 #Arc 10.6
 hist_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_HISTORICAL_FIRE_POLYS_SP'
 current_fire = 'WHSE_LAND_AND_NATURAL_RESOURCE.PROT_CURRENT_FIRE_POLYS_SP'
@@ -163,19 +182,10 @@ arcpy.Erase_analysis(insect_hmn_remove, fire_dist_no_Overlap, insect_dist_no_Ove
 working_au = output_gdb + r"\au_" + time
 arcpy.CopyFeatures_management(au, working_au)
 
-''' Don't need to copy over features that aren't going to be changed - Jesse Fraser
-#Copy FWA Streams to new geodatabase
-working_streams = output_gdb + r"\streams_" + time
-arcpy.CopyFeatures_management(streams, working_streams)
+ #Don't need to copy over features that aren't going to be changed - Jesse Fraser '''
 
-#Copy Fire Disturbance to new geodatabase
-working_fires = output_gdb + r"\fires_" + time
-arcpy.CopyFeatures_management(fires, working_fires)
 
-#Copy Insect Disturbance to new geodatabse
-working_insect = output_gdb + r"\insect_" + time
-arcpy.CopyFeatures_management(insect, working_insect)
-'''
+
 
 #Add fields to Watershed Assessment Units feature that are necessary
 arcpy.AddField_management(working_au, "Rip_Fire_Dstrb_KM", "DOUBLE")
@@ -205,15 +215,15 @@ Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + time
 Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + time
 
 #Buffer disturbance features
-arcpy.Buffer_analysis(insect_dist_no_Overlap, Buff_Dist_Insect, "30 Meters")
-arcpy.Buffer_analysis(fire_dist_no_Overlap, Buff_Dist_Fire, "30 Meters")
+arcpy.Buffer_analysis(working_insect, Buff_Dist_Insect, "30 Meters")
+arcpy.Buffer_analysis(working_fires, Buff_Dist_Fire, "30 Meters")
 
 #Clip streams
 Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + time
 Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + time
 
-arcpy.Clip_analysis(streams, Buff_Dist_Fire, Stream_Dist_Fire)
-arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
+arcpy.Clip_analysis(working_streams, Buff_Dist_Fire, Stream_Dist_Fire)
+arcpy.Clip_analysis(working_streams, Buff_Dist_Insect, Stream_Dist_Insect)
 
 #create a query layer for the assessment units
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
