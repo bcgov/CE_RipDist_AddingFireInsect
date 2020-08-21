@@ -178,11 +178,12 @@ arcpy.Erase_analysis(insect_dissolve, hmn_dissolve, insect_hmn_remove)
 #Erase the fire disturbance from the insect disturbance
 arcpy.Erase_analysis(insect_hmn_remove, fire_dist_no_Overlap, insect_dist_no_Overlap)
 
+Remove this section about fire and insect removal of disturbance double counting''' 
+
 #Copy Watershed Assessment Units to new geodatabase
 working_au = output_gdb + r"\au_" + time
 arcpy.CopyFeatures_management(au, working_au)
 
- #Don't need to copy over features that aren't going to be changed - Jesse Fraser '''
 
 
 
