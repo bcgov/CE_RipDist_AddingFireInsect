@@ -76,7 +76,9 @@ output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 #working_streams = output_gdb + r"\streams_" + time
 #arcpy.CopyFeatures_management(streams, working_streams)
 
-#
+#Repair base features
+arcpy.RepairGeometry_management(fire)
+arcpy.RepairGeometry_management(insect)
 
 
 #Copy Fire Disturbance to new geodatabase
@@ -86,6 +88,10 @@ arcpy.CopyFeatures_management(fire, working_fires)
 #Copy Insect Disturbance to new geodatabse
 working_insect = output_gdb + r"\insect_" + time
 arcpy.CopyFeatures_management(insect, working_insect)
+
+arcpy.RepairGeometry_management
+arcpy.RepairGeometry_management
+
 
 ''' Removed because I created the disturbance inputs
 
