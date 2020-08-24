@@ -70,28 +70,17 @@ save_gdb = "Working_RipDist_" + time
 arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
-#May Not Need
-
 #Copy FWA Streams to new geodatabase
 #working_streams = output_gdb + r"\streams_" + time
 #arcpy.CopyFeatures_management(streams, working_streams)
 
-#Repair base features
-arcpy.RepairGeometry_management(fire)
-arcpy.RepairGeometry_management(insect)
-
-
 #Copy Fire Disturbance to new geodatabase
-working_fires = output_gdb + r"\fires_" + time
-arcpy.CopyFeatures_management(fire, working_fires)
+#working_fires = output_gdb + r"\fires_" + time
+#arcpy.CopyFeatures_management(fire, working_fires)
 
 #Copy Insect Disturbance to new geodatabse
-working_insect = output_gdb + r"\insect_" + time
-arcpy.CopyFeatures_management(insect, working_insect)
-
-arcpy.RepairGeometry_management
-arcpy.RepairGeometry_management
-
+#working_insect = output_gdb + r"\insect_" + time
+#arcpy.CopyFeatures_management(insect, working_insect)
 
 ''' Removed because I created the disturbance inputs
 
@@ -222,23 +211,7 @@ for dataset in datasetList:
     print dataset
 '''
 
-#Create buffer disturbance features
-Buff_Dist_Fire = output_gdb + r"\Fire30m_" + time
-Buff_Dist_Insect = output_gdb + r"\Insect30m_" + time
 
-#Buffer disturbance features
-arcpy.Buffer_analysis(working_insect, Buff_Dist_Insect, "30 Meters")
-arcpy.Buffer_analysis(working_fires, Buff_Dist_Fire, "30 Meters")
-
-#Clip streams
-Stream_Dist_Insect = output_gdb + r"\Insect_Streams_" + time
-Stream_Dist_Fire = output_gdb + r"\Fire_Streams_" + time
-
-arcpy.Clip_analysis(streams, Buff_Dist_Fire, Stream_Dist_Fire)
-arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
-
-arcpy.RepairGeometry_management(Stream_Dist_Insect)
-arcpy.RepairGeometry_management(Stream_Dist_Fire)
 
 #create a query layer for the assessment units
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
@@ -250,7 +223,34 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 
 		#query the au layer to make sure that we are only working on an assessment unit
 		lyr_au.definitionQuery = au_ID + r" = " + str(test[0])
+		
+		insect_au = output_gdb + r"\insect_" + str(test[0]) + time
+		fire_au = output_gdb + r"\fire_" + str(test[0]) + time
+		
+		arcpy.Clip_analysis(insect, lyr_au, insect_au)
+		arcpy.Clip_analysis(fire, lyr_au, fire_au)
+		
+		#Create buffer disturbance features
+		Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + str(test[0]) + time
+		Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + str(test[0]) + time
+		
+		
+		#Buffer disturbance features
+		arcpy.Buffer_analysis(insect_au, Buff_Dist_Insect, "30 Meters")
+		arcpy.Buffer_analysis(fire_au, Buff_Dist_Fire, "30 Meters")
+	
+		#Clip streams
+		Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + str(test[0]) + time
+		Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + str(test[0]) + time
 
+		arcpy.Clip_analysis(streams, Buff_Dist_Fire, Stream_Dist_Fire)
+		arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
+
+
+		Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + str(test[0]) + time
+		Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + str(test[0]) + time
+		
+		''' Removed because clipping etc wasn't working with the whole dataset so it is going to be done @ the AU
 		#Clip by AU
 		#Fire
 		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU_" + str(test[0])[:-2] + "_" + time
@@ -259,20 +259,21 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		#Insect
 		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU_" + str(test[0])[:-2] + "_" + time
 		arcpy.Clip_analysis(Stream_Dist_Insect, lyr_au, au_Stream_Insect_Dist)
-
+		'''
+		
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
-		desc = arcpy.Describe(au_Stream_Insect_Dist)
+		desc = arcpy.Describe(Stream_Dist_Insect)
 		geomField = desc.shapeFieldName
 		insect_areaFieldName = str(geomField) + "_Area"
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
-		desc = arcpy.Describe(au_Stream_Fire_Dist)
+		desc = arcpy.Describe(Stream_Dist_Fire)
 		geomField = desc.shapeFieldName
-		Fire_areaFieldName = str(geomField) + "_Area"
+		fire_areaFieldName = str(geomField) + "_Area"
 
 		#Output stats tables
-		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
-		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
+		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_" + str(test[0]) + "_" + time
+		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_" + str(test[0]) + "_" + time
 
 		#Get the total area for each
 		
@@ -283,7 +284,7 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
 		fire_sum = 0
 		for sum_fun in cursor:
-			fire_sum = sum_fun2.getValue(Fire_areaFieldName) + fire_sum
+			fire_sum = sum_fun2.getValue(fire_areaFieldName) + fire_sum
 
 		#set the total value into the output feature
 		test[1] = fire_sum/1000
