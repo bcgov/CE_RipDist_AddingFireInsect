@@ -17,7 +17,7 @@ import win32com.client, win32api,arcpy.mapping
 #Set environment settings
 from arcpy import env
 arcpy.env.overwriteOutput = True
-
+arcpy.env.extent = "MAXOF"
 #Set time stamp
 time = time.strftime("%y%m%d")
 
@@ -70,9 +70,14 @@ save_gdb = "Working_RipDist_" + time
 arcpy.CreateFileGDB_management(output_save, save_gdb)
 output_gdb = output_save + r"\Working_RipDist_" + time + r".gdb"
 
+#May Not Need
+
 #Copy FWA Streams to new geodatabase
-working_streams = output_gdb + r"\streams_" + time
-arcpy.CopyFeatures_management(streams, working_streams)
+#working_streams = output_gdb + r"\streams_" + time
+#arcpy.CopyFeatures_management(streams, working_streams)
+
+#
+
 
 #Copy Fire Disturbance to new geodatabase
 working_fires = output_gdb + r"\fires_" + time
@@ -212,37 +217,41 @@ for dataset in datasetList:
 '''
 
 #Create buffer disturbance features
-Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + time
-Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + time
+Buff_Dist_Fire = output_gdb + r"\Fire30m_" + time
+Buff_Dist_Insect = output_gdb + r"\Insect30m_" + time
 
 #Buffer disturbance features
 arcpy.Buffer_analysis(working_insect, Buff_Dist_Insect, "30 Meters")
 arcpy.Buffer_analysis(working_fires, Buff_Dist_Fire, "30 Meters")
 
 #Clip streams
-Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + time
-Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + time
+Stream_Dist_Insect = output_gdb + r"\Insect_Streams_" + time
+Stream_Dist_Fire = output_gdb + r"\Fire_Streams_" + time
 
-arcpy.Clip_analysis(working_streams, Buff_Dist_Fire, Stream_Dist_Fire)
-arcpy.Clip_analysis(working_streams, Buff_Dist_Insect, Stream_Dist_Insect)
+arcpy.Clip_analysis(streams, Buff_Dist_Fire, Stream_Dist_Fire)
+arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
+
+arcpy.RepairGeometry_management(Stream_Dist_Insect)
+arcpy.RepairGeometry_management(Stream_Dist_Fire)
 
 #create a query layer for the assessment units
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
 lyr_au = arcpy.mapping.Layer("au_lyr")
+
 #Iterate through each assessment unit
 with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstrb_KM"]) as cursor:
 	for test in cursor:
 
 		#query the au layer to make sure that we are only working on an assessment unit
-		lyr_au.definitionQuery = au_ID + r" = " + test[0]
+		lyr_au.definitionQuery = au_ID + r" = " + str(test[0])
 
 		#Clip by AU
 		#Fire
-		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
+		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU_" + str(test[0])[:-2] + "_" + time
 		arcpy.Clip_analysis(Stream_Dist_Fire, lyr_au, au_Stream_Fire_Dist)
 
 		#Insect
-		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
+		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU_" + str(test[0])[:-2] + "_" + time
 		arcpy.Clip_analysis(Stream_Dist_Insect, lyr_au, au_Stream_Insect_Dist)
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
@@ -260,8 +269,9 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
 
 		#Get the total area for each
-		arcpy.Statistics_analysis(au_Stream_Fire_Dist, au_Stream_Fire_sum, [Fire_areaFieldName, "SUM"])
-		arcpy.Statistics_analysis(au_Stream_Insect_Dist, au_Stream_Insect_sum, [insect_areaFieldName, "SUM"])
+		
+		arcpy.Statistics_analysis(au_Stream_Fire_Dist, au_Stream_Fire_sum, [[Fire_areaFieldName, "SUM"]])
+		arcpy.Statistics_analysis(au_Stream_Insect_Dist, au_Stream_Insect_sum, [[insect_areaFieldName, "SUM"]])
 
 		#Iterate through to get the sum of the lines for fire
 		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
