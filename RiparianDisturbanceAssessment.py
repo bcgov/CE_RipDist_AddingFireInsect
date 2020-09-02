@@ -223,12 +223,7 @@ for dataset in datasetList:
 #arcpy.Buffer_analysis(insect, Buff_Dist_Insect, "30 Meters")
 #arcpy.Buffer_analysis(fire, Buff_Dist_Fire, "30 Meters")
 
-#Clip streams
-Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + time
-Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + time
 
-arcpy.Clip_analysis(streams, Fire, Stream_Dist_Fire)
-arcpy.Clip_analysis(streams, Insect, Stream_Dist_Insect)
 
 #create a query layer for the assessment units
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
@@ -241,14 +236,19 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		#query the au layer to make sure that we are only working on an assessment unit
 		lyr_au.definitionQuery = au_ID + r" = " + str(test[0])
 
-		#Clip by AU
-		#Fire
-		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU_" + str(test[0])[:-2] + "_" + time
-		arcpy.Clip_analysis(Stream_Dist_Fire, lyr_au, au_Stream_Fire_Dist)
 
+		#Clip streams by AU 
+		Stream_Dist_Fire = output_gdb + r"\Streams_AU_" + str(test[0])[:-2]
+		arcpy.Clip_analysis(streams, lyr_au, streams_au)
+		
+		#Clip by Disturbance
+		#Fire
+		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU_" + str(test[0])[:-2]
+		arcpy.Clip_analysis(streams_au, fire, au_Stream_Fire_Dist)
+		
 		#Insect
-		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU_" + str(test[0])[:-2] + "_" + time
-		arcpy.Clip_analysis(Stream_Dist_Insect, lyr_au, au_Stream_Insect_Dist)
+		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU_" + str(test[0])[:-2]
+		arcpy.Clip_analysis(streams_au, insect, au_Stream_Insect_Dist)
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
 		desc = arcpy.Describe(au_Stream_Insect_Dist)
