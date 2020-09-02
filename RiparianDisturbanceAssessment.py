@@ -9,6 +9,9 @@
 # Licence:      <your licence>
 #-------------------------------------------------------------------------------
 
+#NOTES: One needs to create a riparian disturbance (30 m buff) for both Fire and Beetle w/ Human Disturbance removed
+#See Metadata xlsx for more information
+
 #Import system modules
 import sys, string, os, time,  datetime,  arcpy,  csv
 
@@ -36,11 +39,11 @@ BCGW = r'Database Connections\BCGW4Scripting.sde'
 #BCGW = r'bcgw.bcgov\idwprod1.bcgov'
 
 #Current Assessment Data with Assessment Units input
-au = arcpy.GetParameterAsText(0)
-#au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Aquatics_2018_AU_Summary_200619"
+#au = arcpy.GetParameterAsText(0)
+au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Aquatics_2018_AU_Summary_200619"
 #FWA Streams input
-streams = arcpy.GetParameterAsText(1)
-#streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\Data\SSAF_fwaAU_FWA_Streams_200605"
+#streams = arcpy.GetParameterAsText(1)
+streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\FWA_StreamNetwork_RipDistCEF2018_190717"
 
 #Insect Disturbance input
 insect = arcpy.GetParameterAsText(2)
@@ -211,24 +214,21 @@ for dataset in datasetList:
     print dataset
 '''
 
+
 #Create buffer disturbance features
-Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + time
-Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + time
+#Buff_Dist_Fire = output_gdb + r"\Buff_Dist_Fire_" + time
+#Buff_Dist_Insect = output_gdb + r"\Buff_Dist_Insect_" + time
 
 #Buffer disturbance features
-arcpy.Buffer_analysis(insect, Buff_Dist_Insect, "30 Meters")
-arcpy.Buffer_analysis(fire, Buff_Dist_Fire, "30 Meters")
+#arcpy.Buffer_analysis(insect, Buff_Dist_Insect, "30 Meters")
+#arcpy.Buffer_analysis(fire, Buff_Dist_Fire, "30 Meters")
 
 #Clip streams
 Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + time
 Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + time
 
-arcpy.Clip_analysis(streams, Buff_Dist_Fire, Stream_Dist_Fire)
-arcpy.Clip_analysis(streams, Buff_Dist_Insect, Stream_Dist_Insect)
-
-
-Stream_Dist_Insect = output_gdb + r"\Streams_Dist_Insect_" + time
-Stream_Dist_Fire = output_gdb + r"\Streams_Dist_Fire_" + time
+arcpy.Clip_analysis(streams, Fire, Stream_Dist_Fire)
+arcpy.Clip_analysis(streams, Insect, Stream_Dist_Insect)
 
 #create a query layer for the assessment units
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
