@@ -187,8 +187,11 @@ Remove this section about fire and insect removal of disturbance double counting
 working_au = output_gdb + r"\au_" + time
 arcpy.CopyFeatures_management(au, working_au)
 
+work_fire = output_gdb + r"\fire_dist_" + time
+arcpy.CopyFeatures_management(fire, work_fire)
 
-
+work_insect = output_gdb + r"\insect_dist_" + time
+arcpy.CopyFeatures_management(insect, work_insect)
 
 
 #Add fields to Watershed Assessment Units feature that are necessary
@@ -229,6 +232,12 @@ for dataset in datasetList:
 arcpy.MakeFeatureLayer_management(working_au,"au_lyr")
 lyr_au = arcpy.mapping.Layer("au_lyr")
 
+arcpy.MakeFeatureLayer_management(work_fire,"fire_lyr")
+lyr_fire = arcpy.mapping.Layer("fire_lyr")
+
+arcpy.MakeFeatureLayer_management(work_insect,"insect_lyr")
+lyr_insect = arcpy.mapping.Layer("insect_lyr")
+
 #Iterate through each assessment unit
 with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_Dstrb_KM"]) as cursor:
 	for test in cursor:
@@ -238,27 +247,27 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 
 
 		#Clip streams by AU 
-		Stream_Dist_Fire = output_gdb + r"\Streams_AU_" + str(test[0])[:-2]
+		streams_au = output_gdb + r"\Streams_AU_" + str(test[0])[:-2]
 		arcpy.Clip_analysis(streams, lyr_au, streams_au)
 		
 		#Clip by Disturbance
 		#Fire
-		au_Stream_Fire_Dist = output_gdb + r"\Streams_Dist_Fire_AU_" + str(test[0])[:-2]
-		arcpy.Clip_analysis(streams_au, fire, au_Stream_Fire_Dist)
+		au_Fire_Dist = output_gdb + r"\Strm_Dist_Fire_" + str(test[0])[:-2]
+		arcpy.Clip_analysis(streams_au, lyr_fire, au_Fire_Dist)
 		
 		#Insect
-		au_Stream_Insect_Dist = output_gdb + r"\Streams_Dist_Insect_AU_" + str(test[0])[:-2]
-		arcpy.Clip_analysis(streams_au, insect, au_Stream_Insect_Dist)
+		au_Insect_Dist = output_gdb + r"\Strm_Dist_Insect_" + str(test[0])[:-2]
+		arcpy.Clip_analysis(streams_au, lyr_insect, au_Insect_Dist)
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
-		desc = arcpy.Describe(au_Stream_Insect_Dist)
+		desc = arcpy.Describe(au_Insect_Dist)
 		geomField = desc.shapeFieldName
-		insect_areaFieldName = str(geomField) + "_Area"
+		insect_areaFieldName = str(geomField) + "_Length"
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
-		desc = arcpy.Describe(au_Stream_Fire_Dist)
+		desc = arcpy.Describe(au_Fire_Dist)
 		geomField = desc.shapeFieldName
-		Fire_areaFieldName = str(geomField) + "_Area"
+		Fire_areaFieldName = str(geomField) + "_Length"
 
 		#Output stats tables
 		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
@@ -266,14 +275,14 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 
 		#Get the total area for each
 		
-		arcpy.Statistics_analysis(au_Stream_Fire_Dist, au_Stream_Fire_sum, [[Fire_areaFieldName, "SUM"]])
-		arcpy.Statistics_analysis(au_Stream_Insect_Dist, au_Stream_Insect_sum, [[insect_areaFieldName, "SUM"]])
+		arcpy.Statistics_analysis(au_Fire_Dist, au_Stream_Fire_sum, [[Fire_areaFieldName, "SUM"]])
+		arcpy.Statistics_analysis(au_Insect_Dist, au_Stream_Insect_sum, [[insect_areaFieldName, "SUM"]])
 
 		#Iterate through to get the sum of the lines for fire
 		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
 		fire_sum = 0
 		for sum_fun in cursor:
-			fire_sum = sum_fun2.getValue(Fire_areaFieldName) + fire_sum
+			fire_sum = sum_fun.getValue(Fire_areaFieldName) + fire_sum
 
 		#set the total value into the output feature
 		test[1] = fire_sum/1000
