@@ -39,11 +39,11 @@ BCGW = r'Database Connections\BCGW4Scripting.sde'
 #BCGW = r'bcgw.bcgov\idwprod1.bcgov'
 
 #Current Assessment Data with Assessment Units input
-#au = arcpy.GetParameterAsText(0)
-au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Aquatics_2018_AU_Summary_200619"
+au = arcpy.GetParameterAsText(0)
+#au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Aquatics_2018_AU_Summary_200619"
 #FWA Streams input
-#streams = arcpy.GetParameterAsText(1)
-streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\FWA_StreamNetwork_RipDistCEF2018_190717"
+streams = arcpy.GetParameterAsText(1)
+#streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\FWA_StreamNetwork_RipDistCEF2018_190717"
 
 #Insect Disturbance input
 insect = arcpy.GetParameterAsText(2)
@@ -247,16 +247,23 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 
 
 		#Clip streams by AU 
-		streams_au = output_gdb + r"\Streams_AU_" + str(test[0])[:-2]
+		
+		#Too much data to have each AU w/ it's own dataset
+		#streams_au = output_gdb + r"\Streams_AU_" + str(test[0])[:-2]
+		streams_au = output_gdb + r"\Streams_AU"
 		arcpy.Clip_analysis(streams, lyr_au, streams_au)
 		
 		#Clip by Disturbance
 		#Fire
-		au_Fire_Dist = output_gdb + r"\Strm_Dist_Fire_" + str(test[0])[:-2]
+		#Too much data to have each AU w/ it's own dataset
+		#au_Fire_Dist = output_gdb + r"\Strm_Dist_Fire_" + str(test[0])[:-2]
+		au_Fire_Dist = output_gdb + r"\Strm_Dist_Fire"
 		arcpy.Clip_analysis(streams_au, lyr_fire, au_Fire_Dist)
 		
 		#Insect
-		au_Insect_Dist = output_gdb + r"\Strm_Dist_Insect_" + str(test[0])[:-2]
+		#Too much data to have each AU w/ it's own dataset
+		#au_Insect_Dist = output_gdb + r"\Strm_Dist_Insect_" + str(test[0])[:-2]
+		au_Insect_Dist = output_gdb + r"\Strm_Dist_Insect"
 		arcpy.Clip_analysis(streams_au, lyr_insect, au_Insect_Dist)
 
 		#get the areafield name to avoid geometry vs shape issue (Thanks you Carol Mahood)
@@ -270,19 +277,27 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		Fire_areaFieldName = str(geomField) + "_Length"
 
 		#Output stats tables
-		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0]) + "_" + time
-		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0]) + "_" + time
-
+		#Too much data to have each AU w/ it's own dataset
+		#au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire_AU" + str(test[0])[:-2]
+		#au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect_AU" + str(test[0])[:-2]
+		au_Stream_Fire_sum = output_gdb + r"\SUM_Streams_Dist_Fire"
+		au_Stream_Insect_sum = output_gdb + r"\SUM_Streams_Dist_Insect"
 		#Get the total area for each
 		
 		arcpy.Statistics_analysis(au_Fire_Dist, au_Stream_Fire_sum, [[Fire_areaFieldName, "SUM"]])
 		arcpy.Statistics_analysis(au_Insect_Dist, au_Stream_Insect_sum, [[insect_areaFieldName, "SUM"]])
 
 		#Iterate through to get the sum of the lines for fire
-		cursor = arcpy.SearchCursor(au_Stream_Fire_sum)
+		cursor3 = arcpy.SearchCursor(au_Stream_Fire_sum)
+		
+		
+		#sum field name to get data from
+		insect_field_sum = "SUM_" + insect_areaFieldName
+		fire_field_sum = "SUM_" + Fire_areaFieldName
+		
 		fire_sum = 0
-		for sum_fun in cursor:
-			fire_sum = sum_fun.getValue(Fire_areaFieldName) + fire_sum
+		for sum_fun in cursor3:
+			fire_sum = sum_fun.getValue(fire_field_sum) + fire_sum
 
 		#set the total value into the output feature
 		test[1] = fire_sum/1000
@@ -291,7 +306,7 @@ with arcpy.da.UpdateCursor(working_au, [au_ID, "Rip_Fire_Dstrb_KM", "Rip_Insect_
 		cursor2 = arcpy.SearchCursor(au_Stream_Insect_sum)
 		insect_sum = 0
 		for sum_fun2 in cursor2:
-			insect_sum = sum_fun2.getValue(insect_areaFieldName) + insect_sum
+			insect_sum = sum_fun2.getValue(insect_field_sum) + insect_sum
 
 		test[2] = insect_sum/1000
 
