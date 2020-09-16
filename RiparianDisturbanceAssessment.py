@@ -338,7 +338,7 @@ arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_PCNT", form3, "PYTHON
 lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT <=5 OR Rip_Tot_All_Dstrb_PCNT IS NULL"
 
 #Populate Appropriate fields
-arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "Low", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", r"'Low'", "PYTHON_9.3")
 arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "0", "PYTHON_9.3")
 
 lyr_au.definitionQuery = ""
@@ -348,7 +348,7 @@ lyr_au.definitionQuery = ""
 lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT >5 AND Rip_Tot_All_Dstrb_PCNT <=15"
 
 #Populate Appropriate fields
-arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "Medium", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", r"'Medium'", "PYTHON_9.3")
 arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "1", "PYTHON_9.3")
 
 lyr_au.definitionQuery = ""
@@ -358,7 +358,7 @@ lyr_au.definitionQuery = ""
 lyr_au.definitionQuery = "Rip_Tot_All_Dstrb_PCNT >15 "
 
 #Populate Appropriate fields
-arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", "High", "PYTHON_9.3")
+arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_CLS", r"'High'", "PYTHON_9.3")
 arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_NUM", "2", "PYTHON_9.3")
 
 lyr_au.definitionQuery = ""
