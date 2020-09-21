@@ -319,17 +319,19 @@ lyr_au.definition = ""
 #Calc Percents
 form1 = r"(!Rip_Fire_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
 form2 = r"(!Rip_Insect_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
-
-arcpy.CalculateField_management(lyr_au, "Rip_Fire_Dstrb_PCNT", form1, "PYTHON_9.3")
-arcpy.CalculateField_management(lyr_au, "Rip_Insect_Dstrb_PCNT", form2, "PYTHON_9.3")
+# Replace a layer/table view name with a path to a dataset (which can be a layer file) or create the layer/table view within the script
+# The following inputs are layers or table views: "au_200918"
+arcpy.CalculateField_management(in_table="au_200918", field="Rip_Insect_Dstrb_PCNT", expression="(!Rip_Insect_Dstrb_KM!/!AU_TOT_strLngth_km!)*100", expression_type="PYTHON_9.3", code_block="")
+arcpy.CalculateField_management(working_au, "Rip_Fire_Dstrb_PCNT", form1, "PYTHON_9.3")
+arcpy.CalculateField_management(working_au, "Rip_Insect_Dstrb_PCNT", form2, "PYTHON_9.3")
 
 #Calc New Total Disturbance
 form3 = r"!Rip_Fire_Dstrb_KM!+!Rip_Insect_Dstrb_KM!+!Rip_Tot_Human_Dstrb_KM!"
-arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_KM", form3, "PYTHON_9.3")
+arcpy.CalculateField_management(working_au, "Rip_Tot_All_Dstrb_KM", form3, "PYTHON_9.3")
 
 #Calc Total Rip Dist
 form4 = r"(!Rip_Tot_All_Dstrb_KM!/!AU_TOT_strLngth_km!)*100"
-arcpy.CalculateField_management(lyr_au, "Rip_Tot_All_Dstrb_PCNT", form3, "PYTHON_9.3")
+arcpy.CalculateField_management(working_au, "Rip_Tot_All_Dstrb_PCNT", form3, "PYTHON_9.3")
 
 #Create, and calc the class and class num
 
