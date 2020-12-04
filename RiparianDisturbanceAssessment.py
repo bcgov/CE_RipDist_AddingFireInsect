@@ -3,10 +3,12 @@
 # Purpose:      Calculates the percent of insect and fire disturbance within riparian area of each watershed feature.
 #               Metadata concerning input layers: \\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\RipDist_NS_Metadata
 # Author:       nseguin
+#	updated->   jwfraser
 #
 # Created:      08-08-2020
+# Last Updated: 04-12-2020
 # Copyright:    BC Government
-# Licence:      <your licence>
+# Licence:      Apache 2.0
 #-------------------------------------------------------------------------------
 
 #NOTES: One needs to create a riparian disturbance (30 m buff) for both Fire and Beetle w/ Human Disturbance removed
@@ -38,27 +40,20 @@ BCGW = r'Database Connections\BCGW4Scripting.sde'
 #For 10.3
 #BCGW = r'bcgw.bcgov\idwprod1.bcgov'
 
-#Current Assessment Data with Assessment Units input
+#Current Assessment Data with Assessment Units input and Current Riparian Disturbance
 au = arcpy.GetParameterAsText(0)
-#au = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Aquatics_2018_AU_Summary_200619"
+
 #FWA Streams input
 streams = arcpy.GetParameterAsText(1)
-#streams = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\FWA_StreamNetwork_RipDistCEF2018_190717"
 
 #Insect Disturbance input
 insect = arcpy.GetParameterAsText(2)
-#insect = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\Btle_Diss_200827"
 
 #Fire Disturbance input
 fire = arcpy.GetParameterAsText(3)
-#fire = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\Fire_Diss_200827"
-
-#insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\CEF_SSAF_Disturbance_Beetle_200715"
-#insect_base = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\ESI_Data.gdb\CEF_2018\CEF_SSAF_Disturbance_Beetle_200715"
 
 #Save Location Folder
 output_save = arcpy.GetParameterAsText(4)
-#output_save = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis"
 
 #Unique Assessment Unit ID
 #au_ID = "WATERSHED_FEATURE_ID"
@@ -66,7 +61,7 @@ au_ID = arcpy.GetParameterAsText(5)
 
 #Human disturbance input
 #Make sure that the disturbance feature includes roads and guard buffer
-#human_dist = r"\\spatialfiles.bcgov\work\srm\smt\Workarea\ArcProj\P17_Skeena_ESI\Data\Values\Fish and Fish Habitat\Tier 1\Riparian Disturbance Analysis\Working.gdb\SSAF_Dissolve_Hmn_DisturbanceOnly"
+#human_dist = 
 
 #Create working geodatabase
 save_gdb = "Working_RipDist_" + time
