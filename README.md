@@ -3,6 +3,8 @@ Takes CEF Rip Dist and adds fire and insect to disturbance assessment
 
 An ArcPY tool to add fire and insect back into the Prov CEF Assessment for the SSAF Fish and Fish Habitat Assessment (Tier 1)
 
+PLEASE NOTE you will have to create disturbance features for Insect and Fire with other disturbance types removed to avoid double counting before using this tool.
+
 Features Usage Requirements Installation Project Status Goals/Roadmap Getting Help or Reporting an Issue How to Contribute Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms.
 
 Detailed guidance around licenses is available here
