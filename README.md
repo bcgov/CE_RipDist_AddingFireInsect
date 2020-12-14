@@ -1,4 +1,6 @@
 # CE_RipDist_AddingFireInsect
+[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+
 Takes CEF Rip Dist and adds fire and insect to disturbance assessment
 
 An ArcPY tool to add fire and insect back into the Prov CEF Assessment for the SSAF Fish and Fish Habitat Assessment (Tier 1)
